@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer');
 
 
 
-const MEETING_URL = 'https://13.51.238.149/join/31102ShinyGrape';
+const MEETING_URL = 'https://56.228.13.149/join/35115BlueRat';
 const BOT_NAME = process.env.BOT_NAME || 'Bot Recorder';
 
 (async () => {
@@ -20,7 +20,7 @@ const BOT_NAME = process.env.BOT_NAME || 'Bot Recorder';
 
     const [page] = await browser.pages();
 
-    // Patch media APIs to avoid prompts
+    // Patch media APIs to avoid mic/cam permission prompts
     await page.evaluateOnNewDocument(() => {
         Object.defineProperty(navigator, 'mediaDevices', {
             value: {
@@ -34,13 +34,13 @@ const BOT_NAME = process.env.BOT_NAME || 'Bot Recorder';
     await page.goto(MEETING_URL, { waitUntil: 'domcontentloaded' });
     console.log('🌐 MiroTalk page loaded:', MEETING_URL);
 
-    // Set bot name
     await page.waitForSelector('#usernameInput', { timeout: 15000 });
     await page.type('#usernameInput', BOT_NAME);
 
-    // Optional: mute mic/cam before joining
-    await new Promise(resolve => setTimeout(resolve, 1000)); // let buttons load
+    // Let mic/cam buttons load
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
+    // Mute mic & camera
     try {
         const micClass = await page.$eval('#initAudioBtn', el => el.className);
         if (!micClass.includes('fa-microphone-slash')) await page.click('#initAudioBtn');
@@ -52,30 +52,44 @@ const BOT_NAME = process.env.BOT_NAME || 'Bot Recorder';
         const camClass = await page.$eval('#initVideoBtn', el => el.className);
         if (!camClass.includes('fa-video-slash')) await page.click('#initVideoBtn');
     } catch {
-        console.warn('⚠️ Cam toggle not found');
+        console.warn('⚠️ Camera toggle not found');
     }
 
-    // Handle new meeting tab
-    const newPagePromise = new Promise(resolve => {
-        browser.once('targetcreated', async target => {
-            const newPage = await target.page();
-            await newPage.bringToFront();
-            resolve(newPage);
-        });
-    });
-
+    // Join the room
     await page.waitForSelector('.swal2-confirm', { visible: true });
     await page.evaluate(() => {
         const joinBtn = document.querySelector('.swal2-confirm');
         if (joinBtn) joinBtn.click();
     });
 
-    const meetingPage = await newPagePromise;
-    console.log('🎥 Joined meeting successfully as:', BOT_NAME);
+    console.log('🎥 Joined meeting, continuing on same tab');
+    const meetingPage = page;
+    console.log("steam in the loop")
 
-    // Keep the bot alive in the room
-    await new Promise(resolve => setTimeout(resolve, 60 * 1000)); // stay 1 minute for now
+    console.log(`🎥 ${BOT_NAME} joined the meeting`);
+    // 🔁 Check every 30 seconds if the bot is alone
+    const checkInterval = 3 * 1000;
+    console.log('not in the loop')
 
-    await browser.close();
-    console.log('👋 Bot left the meeting and closed the browser');
+    while (true) {
+        await new Promise(resolve => setTimeout(resolve, 5 * 1000));
+            console.log('in side the loop')
+        try {
+            const participantCount = await meetingPage.evaluate(() => {
+                return document.querySelectorAll('video').length;
+            });
+
+            console.log(`👥 Participant count: ${participantCount}`);
+
+            if (participantCount <= 2) {
+                console.log('👤 Bot is alone. Leaving meeting...');
+                await browser.close();
+                break;
+            }
+        } catch (err) {
+            console.error('❌ Error while checking participants:', err.message);
+            await browser.close();
+            break;
+        }
+    }
 })();
