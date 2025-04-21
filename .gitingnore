@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+
+# Dependency lockfiles (optional if using only yarn or npm)
+package-lock.json
+yarn.lock
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Puppeteer Chromium downloads (if any)
+.chromium/
+
+# .idea settings (optional)
+.idea/
+
+# Output files or recordings
+recordings/
+*.webm
+*.mp4
+
+# Environment files (if used)
+.env
+.env.local

@@ -2,12 +2,12 @@ const puppeteer = require('puppeteer');
 
 
 
-const MEETING_URL = 'https://56.228.13.149/join/35115BlueRat';
+const MEETING_URL = 'https://56.228.13.149/join/35115BlueRat'; // todo need to be moved to env variables
 const BOT_NAME = process.env.BOT_NAME || 'Bot Recorder';
 
 (async () => {
     const browser = await puppeteer.launch({
-        headless: true, // true if you're using Docker + Xvfb
+        headless: true, // true if you're using Docker + Xvfb. if needed browser ui change it to false
         ignoreHTTPSErrors: true,
         args: [
             '--no-sandbox',
@@ -67,12 +67,10 @@ const BOT_NAME = process.env.BOT_NAME || 'Bot Recorder';
     console.log("steam in the loop")
 
     console.log(`🎥 ${BOT_NAME} joined the meeting`);
-    // 🔁 Check every 30 seconds if the bot is alone
-    const checkInterval = 3 * 1000;
     console.log('not in the loop')
 
     while (true) {
-        await new Promise(resolve => setTimeout(resolve, 5 * 1000));
+        await new Promise(resolve => setTimeout(resolve, 5 * 1000)); // need to be moved to some variable
             console.log('in side the loop')
         try {
             const participantCount = await meetingPage.evaluate(() => {
