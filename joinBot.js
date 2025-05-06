@@ -66,6 +66,13 @@ process.env.DISPLAY = ':99';
 
     // ✅ Start ffmpeg recording after joining
     console.log('📽️ Starting screen recording...');
+    const { execSync } = require('child_process');
+
+    try {
+        execSync('pactl load-module module-null-sink sink_name=bot_sink');
+    } catch (e) {
+        console.warn('⚠️ Failed to load null sink (maybe already exists)');
+    }
     const ffmpeg = spawn('ffmpeg', [
         '-y',
         '-f', 'x11grab',
@@ -73,12 +80,16 @@ process.env.DISPLAY = ':99';
         '-r', '25',
         '-i', ':99',
         '-f', 'pulse',
-        '-i', 'default',
+        '-ar', '44100',
+        '-ac', '2',
+        '-i', 'bot_sink.monitor',
         '-c:v', 'libvpx',
         '-b:v', '2M',
-        '-c:a', 'libvorbis',
+        '-c:a', 'libopus',
+        '-b:a', '128k',
         RECORDING_PATH
     ]);
+
 
     ffmpeg.stderr.on('data', data => {
         console.log(`ffmpeg: ${data}`);
@@ -115,4 +126,5 @@ process.env.DISPLAY = ':99';
             break;
         }
     }
+
 })();
