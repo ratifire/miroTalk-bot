@@ -2,9 +2,18 @@ const puppeteer = require('puppeteer');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const path = require('path');
+const REGION = process.env.AWS_REGION || 'eu-north-1';
+const s3 = new S3Client({ region: REGION });
+
+
 const MEETING_URL = process.env.URL;
 const BOT_NAME = process.env.BOT_NAME || 'Bot Recorder';
 const RECORDING_PATH = `/app/recordings/${BOT_NAME}-${Date.now()}.webm`;
+const filePath = RECORDING_PATH; // todo need to be deferentially removed and simplified
+
+
 process.env.DISPLAY = ':99';
 
 (async () => {
@@ -127,4 +136,23 @@ process.env.DISPLAY = ':99';
         }
     }
 
+    const fileStream = fs.createReadStream(filePath);
+    const bucketName = 'skillzzy-video-recording';
+    const key = path.basename(filePath);
+
+    async function uploadFile() {
+        try {
+            const uploadParams = {
+                Bucket: bucketName,
+                Key: key,
+                Body: fileStream,
+            };
+
+            const result = await s3.send(new PutObjectCommand(uploadParams));
+            console.log('Upload successful:', result);
+        } catch (err) {
+            console.error('Upload error:', err);
+        }
+    }
+    await uploadFile();
 })();

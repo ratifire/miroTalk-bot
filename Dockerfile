@@ -39,7 +39,7 @@ ENV DISPLAY=:99
 ENV URL=https://51.20.65.174/newcall
 #url need to be moved to something else
 CMD pulseaudio --start --exit-idle-time=-1 --disable-shm=yes --daemonize && \
-    Xvfb :99 -screen 0 1280x720x24 & \
+    Xvfb :99 -screen 0 1280x720x25 & \
     node joinBot.js
 
 
