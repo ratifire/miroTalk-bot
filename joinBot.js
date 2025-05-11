@@ -2,9 +2,18 @@ const puppeteer = require('puppeteer');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const path = require('path');
+const REGION = process.env.AWS_REGION || 'eu-north-1';
+const s3 = new S3Client({ region: REGION });
+
+
 const MEETING_URL = process.env.URL;
 const BOT_NAME = process.env.BOT_NAME || 'Bot Recorder';
-const RECORDING_PATH = `/app/recordings/${BOT_NAME}-${Date.now()}.webm`;
+const RECORDING_PATH = `/app/recordings/${BOT_NAME}-${Date.now()}.mp4`;
+const filePath = RECORDING_PATH; // todo need to be deferentially removed and simplified
+
+
 process.env.DISPLAY = ':99';
 
 (async () => {
@@ -73,22 +82,39 @@ process.env.DISPLAY = ':99';
     } catch (e) {
         console.warn('⚠️ Failed to load null sink (maybe already exists)');
     }
+
     const ffmpeg = spawn('ffmpeg', [
         '-y',
+
+        // 🖥 Video input (X11 screen capture)
+        '-thread_queue_size', '512',
         '-f', 'x11grab',
+        '-framerate', '25',
         '-video_size', '1280x720',
-        '-r', '25',
         '-i', ':99',
+
+        // ⏱ Delay audio by 3 seconds
+        '-itsoffset', '1.6',
+        '-thread_queue_size', '512',
         '-f', 'pulse',
         '-ar', '44100',
         '-ac', '2',
         '-i', 'bot_sink.monitor',
-        '-c:v', 'libvpx',
-        '-b:v', '2M',
-        '-c:a', 'libopus',
+
+        // 🎥 Video encoding (H.264 / MP4)
+        '-c:v', 'libx264',
+        '-preset', 'ultrafast',
+        '-crf', '23',
+
+        // 🔉 Audio encoding (AAC)
+        '-c:a', 'aac',
         '-b:a', '128k',
+
+        // 📼 Output format
+        '-movflags', '+faststart',
         RECORDING_PATH
     ]);
+
 
 
     ffmpeg.stderr.on('data', data => {
@@ -115,6 +141,8 @@ process.env.DISPLAY = ':99';
                 // ✅ Stop recording
                 ffmpeg.kill('SIGINT');
 
+                await new Promise(resolve => ffmpeg.on('close', resolve)); // <-- wait for proper closure
+
                 await browser.close();
                 console.log(`📁 Recording saved to: ${RECORDING_PATH}`);
                 break;
@@ -127,4 +155,23 @@ process.env.DISPLAY = ':99';
         }
     }
 
+    const fileStream = fs.createReadStream(filePath);
+    const bucketName = 'skillzzy-video-recording';
+    const key = path.basename(filePath);
+
+    async function uploadFile() {
+        try {
+            const uploadParams = {
+                Bucket: bucketName,
+                Key: key,
+                Body: fileStream,
+            };
+
+            const result = await s3.send(new PutObjectCommand(uploadParams));
+            console.log('Upload successful:', result);
+        } catch (err) {
+            console.error('Upload error:', err);
+        }
+    }
+    await uploadFile();
 })();

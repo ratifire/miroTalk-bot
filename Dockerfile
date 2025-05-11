@@ -38,9 +38,9 @@ RUN npx puppeteer browsers install chrome
 ENV DISPLAY=:99
 ENV URL=https://51.20.65.174/newcall
 #url need to be moved to something else
-CMD pulseaudio --start --exit-idle-time=-1 --disable-shm=yes --daemonize && \
+CMD ["sh", "-c", "pulseaudio --start --exit-idle-time=-1 --disable-shm=yes --daemonize && \
     Xvfb :99 -screen 0 1280x720x24 & \
-    node joinBot.js
+    DISPLAY=:99 node joinBot.js"]
 
 
 #CMD ["sh", "-c", "while true; do sleep 3600; done"]
