@@ -1,0 +1,20 @@
+{
+  "name": "BotScene",
+  "sources": [
+    {
+      "name": "DisplayCapture",
+      "type": "display_capture",
+      "settings": {
+        "display": 0,
+        "capture_cursor": true
+      }
+    },
+    {
+      "name": "AudioInputCapture",
+      "type": "pulse_input_capture",
+      "settings": {
+        "device_id": "bot_sink.monitor"
+      }
+    }
+  ]
+}

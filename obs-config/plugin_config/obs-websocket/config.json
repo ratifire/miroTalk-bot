@@ -1,0 +1,6 @@
+{
+  "server": {
+    "port": 4455,
+    "auth": false
+  }
+}
