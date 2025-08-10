@@ -2,10 +2,10 @@ const puppeteer = require('puppeteer');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const path = require('path');
-const REGION = process.env.AWS_REGION || 'eu-north-1';
-const s3 = new S3Client({ region: REGION });
+ const REGION = process.env.AWS_REGION || 'eu-north-1';
+ const s3 = new S3Client({ region: REGION });
 
 
 const MEETING_URL = process.env.URL;
@@ -83,34 +83,56 @@ process.env.DISPLAY = ':99';
         console.warn('⚠️ Failed to load null sink (maybe already exists)');
     }
 
+
+    function waitForAudioActivity(timeout = 5000) {
+        return new Promise((resolve, reject) => {
+            const start = Date.now();
+            const checkInterval = setInterval(() => {
+                try {
+                    const output = execSync('pactl list source-outputs | grep "bot_sink.monitor" || true').toString();
+                    if (output.includes('bot_sink.monitor')) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    } else if (Date.now() - start > timeout) {
+                        clearInterval(checkInterval);
+                        console.warn('⚠️ Audio monitor did not start within timeout');
+                        resolve(); // Don't reject — allow fallback
+                    }
+                } catch (err) {
+                    clearInterval(checkInterval);
+                    reject(err);
+                }
+            }, 300);
+        });
+    }
+
+    console.log('⏳ Waiting for audio stream...');
+    await waitForAudioActivity();
+    console.log('✅ Audio stream is active, starting FFmpeg');
+
+
     const ffmpeg = spawn('ffmpeg', [
         '-y',
-
-        // 🖥 Video input (X11 screen capture)
-        '-thread_queue_size', '512',
+        '-thread_queue_size', '1024',
         '-f', 'x11grab',
-        '-framerate', '25',
+        '-framerate', '20',
         '-video_size', '1280x720',
         '-i', ':99',
 
-        // ⏱ Delay audio by 3 seconds
-        '-itsoffset', '1.6',
-        '-thread_queue_size', '512',
+        '-thread_queue_size', '1024',
         '-f', 'pulse',
-        '-ar', '44100',
-        '-ac', '2',
         '-i', 'bot_sink.monitor',
 
-        // 🎥 Video encoding (H.264 / MP4)
+        '-probesize', '100M',
+        '-analyzeduration', '10M',
+
         '-c:v', 'libx264',
         '-preset', 'ultrafast',
         '-crf', '23',
 
-        // 🔉 Audio encoding (AAC)
         '-c:a', 'aac',
         '-b:a', '128k',
 
-        // 📼 Output format
         '-movflags', '+faststart',
         RECORDING_PATH
     ]);
@@ -156,7 +178,7 @@ process.env.DISPLAY = ':99';
     }
 
     const fileStream = fs.createReadStream(filePath);
-    const bucketName = 'skillzzy-video-recording';
+    const bucketName = process.env.S3;
     const key = path.basename(filePath);
 
     async function uploadFile() {

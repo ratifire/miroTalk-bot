@@ -37,7 +37,16 @@ RUN npx puppeteer browsers install chrome
 
 ENV DISPLAY=:99
 ENV URL=https://51.20.65.174/newcall
+ENV S3=skillzzy-video
 #url need to be moved to something else
+
+
+#CMD ["sh", "-c", "\
+#  pulseaudio --start --exit-idle-time=-1 --disable-shm=yes --daemonize ; \
+#  Xvfb :99 -screen 0 1280x720x24 & \
+#  DISPLAY=:99 node joinBot.js ; \
+#  while true; do sleep 3600; done"]
+
 CMD ["sh", "-c", "pulseaudio --start --exit-idle-time=-1 --disable-shm=yes --daemonize && \
     Xvfb :99 -screen 0 1280x720x24 & \
     DISPLAY=:99 node joinBot.js"]
