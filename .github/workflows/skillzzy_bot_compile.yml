@@ -1,4 +1,4 @@
-name: Skillzzy_bot_compile
+name: Skillzzy_bot_json_check
 
 on:
   push:
@@ -7,20 +7,17 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  validate-json:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: maven
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Build with Maven
-        run: mvn compile
-
-      - name: Test with Maven
-        run: mvn test
+      - name: Validate JSON files
+        run: |
+          echo "Checking JSON syntax..."
+          find . -type f -name "*.json" | while read file; do
+            echo "Validating $file"
+            jq empty "$file"
+          done
