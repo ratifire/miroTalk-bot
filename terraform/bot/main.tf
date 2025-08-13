@@ -57,7 +57,7 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 }
 
 resource "aws_iam_role_policy" "lambda_ecs_policy" {
-  role   = aws_iam_role.lambda_role.id
+  role = aws_iam_role.lambda_role.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -71,11 +71,11 @@ resource "aws_iam_role_policy" "lambda_ecs_policy" {
 }
 
 resource "aws_lambda_function" "trigger_function" {
-  function_name    = var.lambda_function_name
-  role             = aws_iam_role.lambda_role.arn
-  handler          = "handler.lambda_handler"
-  runtime          = "python3.12"
-  filename         = "${path.module}/../lambda/lambda.zip"
-  timeout          = 30
+  function_name = var.lambda_function_name
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "handler.lambda_handler"
+  runtime       = "python3.12"
+  filename      = "${path.module}/../lambda/lambda.zip"
+  timeout       = 30
 }
 

@@ -73,7 +73,7 @@ resource "aws_iam_role" "lambda_role" {
 }
 
 resource "aws_iam_policy" "lambda_ecs_policy" {
-  name   = "lambda_ecs_policy"
+  name = "lambda_ecs_policy"
 
   policy = jsonencode({
     Version = "2012-10-17",
