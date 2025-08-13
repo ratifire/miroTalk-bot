@@ -13,15 +13,15 @@ exports.handler = async (event) => {
         }
 
         const params = {
-            cluster: "moroClaster",
+            cluster: "miro-talk-bot-claster",
             launchType: "FARGATE",
-            taskDefinition: "mirobot",
+            taskDefinition: "experimental-miro-talk-bot-video-recorder",
             count: 1,
             platformVersion: "LATEST",
             networkConfiguration: {
                 awsvpcConfiguration: {
-                    subnets: ["subnet-0153900c2b1204bdb"],
-                    securityGroups: ["subnet-0995a738220b53453"],
+                    subnets: ["subnet-07e4ce464f47fef6d"],
+                    securityGroups: ["sg-0ca926c2de128a40d"],
                     assignPublicIp: "ENABLED"
                 }
             },
