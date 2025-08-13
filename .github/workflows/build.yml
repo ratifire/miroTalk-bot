@@ -1,0 +1,91 @@
+name: Build
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+  AWS_REGION: eu-north-1
+  IMAGE_REPO_NAME: miro-talk-bot
+  ECS_CLUSTER: miro-talk-bot-claster
+  ECS_TASK_DEF: experimental-miro-talk-bot-video-recorder
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select environment to deploy (prod, dev)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    name: Build and Push
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Set short SHA
+        run: echo "SHORT_SHA=${GITHUB_SHA::8}" >> $GITHUB_ENV
+
+      - name: Ensure ECR repository exists
+        run: |
+          aws ecr describe-repositories --repository-names "${IMAGE_REPO_NAME}" || \
+          aws ecr create-repository --repository-name "${IMAGE_REPO_NAME}"
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${IMAGE_REPO_NAME}"
+          docker build -t "$IMAGE_URI:latest" -t "$IMAGE_URI:${{ env.SHORT_SHA }}" .
+          docker push "$IMAGE_URI:latest"
+          docker push "$IMAGE_URI:${{ env.SHORT_SHA }}"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Select .tfvars file based on environment
+        run: |
+          echo "Selecting .tfvars file for environment: ${{ github.event.inputs.environment }}"
+          if [[ ! -f "/home/runner/work/miroTalk-bot/miroTalk-bot/terraform/bot/${{ github.event.inputs.environment }}.tfvars" ]]; then
+            echo "Error: File ${{ github.event.inputs.environment }}.tfvars does not exist in /home/runner/work/miroTalk-bot/miroTalk-bot/terraform/bot."
+            exit 1
+          fi
+
+      - name: Terraform Init
+        working-directory: terraform/lambda
+        run: terraform init -backend-config="${{ github.event.inputs.environment }}.backend" -reconfigure
+
+      - name: Terraform Format
+        working-directory: terraform/lambda
+        run: terraform fmt -check
+
+      - name: Terraform Plan
+        working-directory: terraform/lambda
+        env:
+          TF_VAR_image_tag: ${{ env.SHORT_SHA }}
+        run: terraform plan -input=false -var-file="${{ github.event.inputs.environment }}.tfvars"
+
+      - name: Terraform Apply
+        working-directory: terraform/lambda
+        env:
+          TF_VAR_image_tag: ${{ env.SHORT_SHA }}
+        run: terraform apply -auto-approve -input=false -var-file="${{ github.event.inputs.environment }}.tfvars"
