@@ -1,11 +1,7 @@
 data "aws_region" "current_region" {}
 
-data "aws_ecr_repository" "bot_repo" {
-  name = var.ecr_repo_name
-}
-
 data "aws_ecr_image" "latest_image" {
-  repository_name = "miro-talk-bot"
+  repository_name = var.ecr_repo_name
   most_recent     = true
 }
 
