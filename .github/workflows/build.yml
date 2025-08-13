@@ -2,7 +2,7 @@ name: Build
 
 env:
   IMAGE_TAG: ${{ github.sha }}
-  AWS_REGION: eu-central-1
+  AWS_REGION: eu-north-1
   IMAGE_REPO_NAME: miro-talk-bot
   ECS_CLUSTER: miro-talk-bot-claster
   ECS_TASK_DEF: experimental-miro-talk-bot-video-recorder
