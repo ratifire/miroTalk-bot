@@ -16,15 +16,15 @@ def lambda_handler(event, context):
             raise ValueError("Missing 'url' in SNS message")
 
         response = ecs.run_task(
-            cluster="moroClaster",
+            cluster="miro-talk-bot-claster",
             launchType="FARGATE",
-            taskDefinition="mirobot",
+            taskDefinition="experimental-miro-talk-bot-video-recorder",
             count=1,
             platformVersion="LATEST",
             networkConfiguration={
                 'awsvpcConfiguration': {
-                    'subnets': ['subnet-0153900c2b1204bdb'],
-                    'securityGroups': [],  # ⚠️ this looks like a subnet ID, double check
+                    'subnets': ['subnet-07e4ce464f47fef6d'],
+                    'securityGroups': ['sg-0ca926c2de128a40d'],  # ⚠️ this looks like a subnet ID, double check
                     'assignPublicIp': 'ENABLED'
                 }
             },
