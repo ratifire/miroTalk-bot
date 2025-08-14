@@ -97,29 +97,3 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_ecs_policy.arn
 }
-
-resource "aws_security_group" "ecs_task_sg" {
-  name        = "mirobot-fargate-sg"
-  description = "Security Group for ECS Fargate task"
-  vpc_id      = data.aws_vpc.main_vpc.id
-
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "mirobot-fargate-sg"
-  }
-}
-

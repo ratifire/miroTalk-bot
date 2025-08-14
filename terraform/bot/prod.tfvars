@@ -1,2 +1,2 @@
 s3_bucket_name = "skillzzy-bucket-prod"
-region         = "eu-north-1"
+aws_region         = "eu-north-1"

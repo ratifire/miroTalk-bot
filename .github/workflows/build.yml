@@ -63,6 +63,11 @@ jobs:
           docker push "$IMAGE_URI:latest"
           docker push "$IMAGE_URI:${{ env.SHORT_SHA }}"
 
+      - name: Package Lambda function
+        run: |
+          cd lambda
+          zip -r ../terraform/lambda/lambda.zip .
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
