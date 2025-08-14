@@ -19,7 +19,9 @@ variable "lambda_function_name" {
 }
 
 variable "s3_bucket_name" {
-  description = "skillzzy-video"
+  description = "S3 bucket name"
+  type        = string
+  default     = "skillzzy-video"
 }
 
 variable "main_vpc_id" {
