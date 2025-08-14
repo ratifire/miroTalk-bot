@@ -83,7 +83,6 @@ resource "aws_lambda_function" "trigger_function" {
   }
 
   lifecycle {
-    prevent_destroy       = true
     create_before_destroy = true
     ignore_changes        = [source_code_hash]
   }
