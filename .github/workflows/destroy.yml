@@ -64,10 +64,10 @@ jobs:
         working-directory: terraform/bot
         env:
           TF_VAR_image_tag: dummy
-        run: terraform plan -destroy -input=false -var-file="$ENV_FILE"
+        run: terraform plan -destroy -input=false -var-file="${{ github.event.inputs.environment }}.tfvars"
 
       - name: Terraform Destroy
         working-directory: terraform/bot
         env:
           TF_VAR_image_tag: dummy
-        run: terraform destroy -auto-approve -input=false -var-file="$ENV_FILE"
+        run: terraform destroy -auto-approve -input=false -var-file="${{ github.event.inputs.environment }}.tfvars"
