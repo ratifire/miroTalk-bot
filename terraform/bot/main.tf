@@ -70,7 +70,7 @@ resource "aws_lambda_function" "trigger_function" {
   handler          = "main.lambda_handler"
   runtime          = "python3.12"
   filename         = "${path.module}/../lambda/lambda.zip"
-  source_code_hash = filebase64sha256("${path.module}/../lambda/lambda.zip")
+  # source_code_hash = filebase64sha256("${path.module}/../lambda/lambda.zip")
   timeout          = 30
 
   environment {
