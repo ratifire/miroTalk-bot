@@ -65,13 +65,13 @@ resource "aws_iam_role_policy" "lambda_ecs_policy" {
 }
 
 resource "aws_lambda_function" "trigger_function" {
-  function_name    = var.lambda_function_name
-  role             = aws_iam_role.lambda_role.arn
-  handler          = "main.lambda_handler"
-  runtime          = "python3.12"
-  filename         = "${path.module}/../lambda/lambda.zip"
+  function_name = var.lambda_function_name
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "main.lambda_handler"
+  runtime       = "python3.12"
+  filename      = "${path.module}/../lambda/lambda.zip"
   # source_code_hash = filebase64sha256("${path.module}/../lambda/lambda.zip")
-  timeout          = 30
+  timeout = 30
 
   environment {
     variables = {
