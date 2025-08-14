@@ -88,3 +88,10 @@ resource "aws_lambda_function" "trigger_function" {
   }
 }
 
+resource "aws_sqs_queue" "matcher_participant" {
+  name                       = var.bot_queue_name
+  visibility_timeout_seconds = 30
+  delay_seconds              = 0
+  message_retention_seconds  = 86400
+}
+

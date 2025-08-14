@@ -40,3 +40,7 @@ variable "lambda_zip_exists" {
   type    = bool
   default = true
 }
+
+variable "bot_queue_name" {
+  default = "videoRecordingQueueDev"
+}
