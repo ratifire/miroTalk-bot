@@ -35,3 +35,8 @@ variable "subnet_id" {
 variable "sg_id" {
   default = "sg-0ca926c2de128a40d"
 }
+
+variable "lambda_zip_exists" {
+  type    = bool
+  default = true
+}
