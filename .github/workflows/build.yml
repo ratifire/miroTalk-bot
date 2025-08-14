@@ -52,6 +52,10 @@ jobs:
           aws ecr describe-repositories --repository-names "${IMAGE_REPO_NAME}" || \
           aws ecr create-repository --repository-name "${IMAGE_REPO_NAME}"
 
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
       - name: Build and push Docker image
         run: |
           IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${IMAGE_REPO_NAME}"
