@@ -52,6 +52,11 @@ jobs:
             exit 1
           fi
 
+      - name: Prepare empty lambda.zip
+        run: |
+          mkdir -p lambda
+          touch lambda/lambda.zip
+
       - name: Terraform Init
         working-directory: terraform/bot
         run: terraform init -backend-config="${{ github.event.inputs.environment }}.backend" -reconfigure
