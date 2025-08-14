@@ -27,3 +27,11 @@ variable "s3_bucket_name" {
 variable "main_vpc_id" {
   default = "vpc-029433628e702ccd1"
 }
+
+variable "subnet_id" {
+  default = "subnet-07e4ce464f47fef6d"
+}
+
+variable "sg_id" {
+  default = "sg-0ca926c2de128a40d"
+}
