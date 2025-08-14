@@ -70,4 +70,4 @@ jobs:
         working-directory: terraform/bot
         env:
           TF_VAR_image_tag: dummy
-        run: terraform destroy -auto-approve -input=false -var-file="${{ github.event.inputs.environment }}.tfvars"
+        run: terraform destroy -auto-approve -input=false -var-file="${{ github.event.inputs.environment }}.tfvars" -var "lambda_zip_exists=false"
