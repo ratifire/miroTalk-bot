@@ -40,12 +40,6 @@ resource "aws_ecs_task_definition" "video_recorder" {
   ])
 }
 
-
-resource "aws_iam_role" "lambda_role" {
-  name               = "${var.lambda_function_name}-role"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-}
-
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
