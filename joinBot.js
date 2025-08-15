@@ -48,31 +48,51 @@ async function loadMeetingPage(page) {
 }
 
 async function joinMeeting(page) {
-    await page.waitForSelector('#usernameInput');
+    console.log('Entering username...');
+    await page.waitForSelector('#usernameInput', { timeout: 15000 });
     await page.type('#usernameInput', BOT_NAME);
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const micBtn = await page.$('#initAudioBtn');
-    if (micBtn) await micBtn.click();
+    console.log('Checking audio button...');
+    try {
+        await page.waitForSelector('#initAudioBtn', { timeout: 5000 });
+        await page.click('#initAudioBtn');
+        console.log('Audio button clicked');
+    } catch (error) {
+        console.log('Audio button not found or not clickable, skipping');
+    }
 
-    const camBtn = await page.$('#initVideoBtn');
-    if (camBtn) await camBtn.click();
+    console.log('Checking camera button...');
+    try {
+        await page.waitForSelector('#initVideoBtn', { timeout: 5000 });
+        await page.click('#initVideoBtn');
+        console.log('Camera button clicked');
+    } catch (error) {
+        console.log('Camera button not found or not clickable, skipping');
+    }
 
-    await page.waitForSelector('.swal2-confirm', { visible: true });
-    await page.click('.swal2-confirm');
+    console.log('Waiting for join button...');
+    await page.waitForSelector('.swal2-confirm', { visible: true, timeout: 15000 });
+    
+    console.log('Clicking join button...');
+    await page.evaluate(() => {
+        const joinBtn = document.querySelector('.swal2-confirm');
+        if (joinBtn && joinBtn.offsetParent !== null) {
+            joinBtn.click();
+        } else {
+            throw new Error('Join button not clickable');
+        }
+    });
+    
     console.log('Bot joined meeting');
-}
-
-function setupAudio() {
-    execSync('pactl load-module module-null-sink sink_name=bot_sink');
 }
 
 function waitForAudio() {
     return new Promise((resolve) => {
         const start = Date.now();
         const check = setInterval(() => {
-            const output = execSync('pactl list source-outputs | grep "bot_sink.monitor" || true').toString();
-            if (output.includes('bot_sink.monitor') || Date.now() - start > 5000) {
+            const output = execSync('pactl list sinks | grep "bot_sink" || true').toString();
+            if (output.includes('bot_sink') || Date.now() - start > 5000) {
                 clearInterval(check);
                 resolve();
             }
@@ -82,14 +102,13 @@ function waitForAudio() {
 
 async function startRecording() {
     console.log('Starting recording...');
-    
-    setupAudio();
     await waitForAudio();
 
     return spawn('ffmpeg', [
         '-y',
         '-thread_queue_size', '1024',
         '-f', 'x11grab',
+        '-draw_mouse', '0',
         '-framerate', '20',
         '-video_size', '1280x720',
         '-i', ':99',
