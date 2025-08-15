@@ -88,6 +88,24 @@ resource "aws_lambda_function" "trigger_function" {
   }
 }
 
+resource "aws_sns_topic" "meeting_starting_topic" {
+  name = "meetingStartingTopic"
+}
+
+resource "aws_sns_topic_subscription" "lambda_subscription" {
+  topic_arn = aws_sns_topic.meeting_starting_topic.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.trigger_function.arn
+}
+
+resource "aws_lambda_permission" "allow_sns" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.trigger_function.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.meeting_starting_topic.arn
+}
+
 resource "aws_sqs_queue" "matcher_participant" {
   name                       = var.bot_queue_name
   visibility_timeout_seconds = 30
