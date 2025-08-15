@@ -95,3 +95,25 @@ resource "aws_sqs_queue" "matcher_participant" {
   message_retention_seconds  = 86400
 }
 
+resource "aws_vpc_endpoint" "ecr_api" {
+  vpc_id             = var.main_vpc_id
+  service_name       = "com.amazonaws.${var.aws_region}.ecr.api"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = data.aws_subnets.private_subnets.ids
+  security_group_ids = [var.sg_id]
+}
+
+resource "aws_vpc_endpoint" "ecr_dkr" {
+  vpc_id             = var.main_vpc_id
+  service_name       = "com.amazonaws.${var.aws_region}.ecr.dkr"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = data.aws_subnets.private_subnets.ids
+  security_group_ids = [var.sg_id]
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = var.main_vpc_id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = data.aws_route_tables.private_route_tables.ids
+}

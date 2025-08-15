@@ -18,6 +18,11 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_policy_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+resource "aws_iam_role_policy_attachment" "ecs_execution_ecr_readonly" {
+  role       = aws_iam_role.ecs_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
 resource "aws_iam_role" "ecs_task_role" {
   name = "ecs_task_role"
 
