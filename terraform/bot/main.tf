@@ -12,8 +12,8 @@ resource "aws_cloudwatch_log_group" "ecs_task_logs" {
 resource "aws_ecs_task_definition" "video_recorder" {
   family                   = var.task_family
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "512"
-  memory                   = "1024"
+  cpu                      = "8192"
+  memory                   = "16384"
   network_mode             = "awsvpc"
 
   execution_role_arn = aws_iam_role.ecs_execution_role.arn

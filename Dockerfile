@@ -2,59 +2,41 @@ FROM ghcr.io/puppeteer/puppeteer:latest
 
 USER root
 
-RUN apt-get update && apt-get install -y \
-    chromium \
+# Install system dependencies in a single layer with cleanup
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     xvfb \
-    -y pulseaudio \
-    fonts-liberation \
-    libatk-bridge2.0-0 \
-    libnspr4 \
-    libnss3 \
-    libxss1 \
-    libasound2 \
-    libatk1.0-0 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libgbm1 \
-    libgtk-3-0 \
-    curl \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-#ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
-#   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-#  NODE_ENV=production
+    pulseaudio \
+    pulseaudio-utils \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 WORKDIR /app
 
-COPY . .
-RUN npm install
+# Copy package files first for better caching
+COPY package*.json ./
+
+# Install npm dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy application code
+COPY joinBot.js ./
+
+# Create recordings directory
 RUN mkdir -p /app/recordings
-RUN npx puppeteer browsers install chrome
 
+# Environment variables
 ENV DISPLAY=:99
-ENV URL=https://51.20.65.174/newcall
-ENV S3=skillzzy-video
-#url need to be moved to something else
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
+ENV XDG_RUNTIME_DIR=/tmp
+# URL and S3 should be provided at runtime via -e flags
 
-
-#CMD ["sh", "-c", "\
-#  pulseaudio --start --exit-idle-time=-1 --disable-shm=yes --daemonize ; \
-#  Xvfb :99 -screen 0 1280x720x24 & \
-#  DISPLAY=:99 node joinBot.js ; \
-#  while true; do sleep 3600; done"]
-
-CMD ["sh", "-c", "pulseaudio --start --exit-idle-time=-1 --disable-shm=yes --daemonize && \
+# Start command
+CMD ["sh", "-c", "\
+    pulseaudio --start --exit-idle-time=-1 --disable-shm=yes --daemonize && \
+    sleep 1 && \
+    pactl load-module module-null-sink sink_name=bot_sink || true && \
     Xvfb :99 -screen 0 1280x720x24 & \
-    DISPLAY=:99 node joinBot.js"]
+    sleep 2 && \
+    node joinBot.js"]
 
-
-#CMD ["sh", "-c", "while true; do sleep 3600; done"]
-
-#CMD ["dumb-init", "sh", "-c", \
- #"Xvfb :99 -screen 0 1280x720x24 & \
-  # export DISPLAY=:99 && \
-   #node joinBot.js"]
