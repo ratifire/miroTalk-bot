@@ -28,7 +28,7 @@ exports.handler = async (event) => {
             overrides: {
                 containerOverrides: [
                     {
-                        name: "miro-bot",
+                        name: "mirobot",
                         environment: [
                             {
                                 name: "URL",

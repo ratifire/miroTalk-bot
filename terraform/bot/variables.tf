@@ -7,7 +7,7 @@ variable "cluster_name" {
 }
 
 variable "task_family" {
-  default = "experimental-miro-talk-bot-video-recorder"
+  default = "mirobot"
 }
 
 variable "ecr_repo_name" {
