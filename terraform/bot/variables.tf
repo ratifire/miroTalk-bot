@@ -25,15 +25,15 @@ variable "s3_bucket_name" {
 }
 
 variable "main_vpc_id" {
-  default = "vpc-029433628e702ccd1"
+  default = "vpc-0032e90317069a534"
 }
 
 variable "subnet_id" {
-  default = "subnet-07e4ce464f47fef6d"
+  default = "subnet-0b6df8f042c39ef90"
 }
 
 variable "sg_id" {
-  default = "sg-0ca926c2de128a40d"
+  default = "sg-00e66c9ea2568e5f8"
 }
 
 variable "lambda_zip_exists" {

@@ -23,8 +23,8 @@ def lambda_handler(event, context):
             platformVersion="LATEST",
             networkConfiguration={
                 'awsvpcConfiguration': {
-                    'subnets': ['subnet-07e4ce464f47fef6d'],
-                    'securityGroups': ['sg-0ca926c2de128a40d'],  # ⚠️ this looks like a subnet ID, double check
+                    'subnets': ['subnet-0b6df8f042c39ef90'],
+                    'securityGroups': ['sg-00e66c9ea2568e5f8'],  # ⚠️ this looks like a subnet ID, double check
                     'assignPublicIp': 'ENABLED'
                 }
             },
