@@ -45,29 +45,34 @@ jobs:
 
       - name: Select .tfvars file for environment
         run: |
-          ENV_FILE="${{ github.workspace }}/miroTalk-bot/terraform/bot/${{ github.event.inputs.environment }}.tfvars"
+          ENV_FILE="${{ github.workspace }}/terraform/bot/${{ github.event.inputs.environment }}.tfvars"
           echo "Selecting .tfvars file for environment: $ENV_FILE"
           if [[ ! -f "$ENV_FILE" ]]; then
             echo "Error: $ENV_FILE does not exist!"
             exit 1
           fi
 
+      - name: Prepare empty lambda.zip
+        run: |
+          mkdir -p lambda
+          touch lambda/lambda.zip
+
       - name: Terraform Init
-        working-directory: miroTalk-bot/terraform/bot
+        working-directory: terraform/bot
         run: terraform init -backend-config="${{ github.event.inputs.environment }}.backend" -reconfigure
 
       - name: Terraform Format
-        working-directory: miroTalk-bot/terraform/bot
+        working-directory: terraform/bot
         run: terraform fmt -check
 
       - name: Terraform Plan (destroy)
-        working-directory: miroTalk-bot/terraform/bot
+        working-directory: terraform/bot
         env:
           TF_VAR_image_tag: dummy
-        run: terraform plan -destroy -input=false -var-file="$ENV_FILE"
+        run: terraform plan -destroy -input=false -var-file="${{ github.event.inputs.environment }}.tfvars"
 
       - name: Terraform Destroy
-        working-directory: miroTalk-bot/terraform/bot
+        working-directory: terraform/bot
         env:
           TF_VAR_image_tag: dummy
-        run: terraform destroy -auto-approve -input=false -var-file="$ENV_FILE"
+        run: terraform destroy -auto-approve -input=false -var-file="${{ github.event.inputs.environment }}.tfvars"
