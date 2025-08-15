@@ -139,12 +139,22 @@ async function monitorMeeting(page, ffmpeg, browser) {
             ffmpeg.kill('SIGINT');
             await new Promise(resolve => ffmpeg.on('close', resolve));
             await browser.close();
-            break;
+            console.log('Recording saved, starting upload...');
+            return true; // Return true to indicate meeting ended
         }
     }
 }
 
 async function uploadRecording(filePath) {
+    console.log(`Starting upload of: ${filePath}`);
+    
+    if (!fs.existsSync(filePath)) {
+        throw new Error(`Recording file not found: ${filePath}`);
+    }
+    
+    const fileStats = fs.statSync(filePath);
+    console.log(`File size: ${Math.round(fileStats.size / 1024 / 1024)}MB`);
+    
     const fileStream = fs.createReadStream(filePath);
     const fileName = path.basename(filePath);
     
@@ -154,6 +164,7 @@ async function uploadRecording(filePath) {
         Body: fileStream
     };
 
+    console.log(`Uploading to S3 bucket: ${S3_BUCKET}`);
     await s3.send(new PutObjectCommand(params));
     console.log('Upload complete');
 }
@@ -169,8 +180,13 @@ async function main() {
         await joinMeeting(page);
         
         ffmpeg = await startRecording();
-        await monitorMeeting(page, ffmpeg, browser);
-        await uploadRecording(RECORDING_PATH);
+        const meetingEnded = await monitorMeeting(page, ffmpeg, browser);
+        
+        if (meetingEnded) {
+            await uploadRecording(RECORDING_PATH);
+            console.log('Upload completed successfully');
+            process.exit(0);
+        }
         
     } catch (error) {
         console.error('Error:', error.message);
