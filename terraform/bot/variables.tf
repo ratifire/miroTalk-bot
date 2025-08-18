@@ -44,3 +44,7 @@ variable "lambda_zip_exists" {
 variable "bot_queue_name" {
   default = "videoRecordingQueueDev"
 }
+
+variable "sns_topic_name" {
+  default = "meetingStartingTopic"
+}
