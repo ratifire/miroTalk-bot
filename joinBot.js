@@ -8,7 +8,8 @@ const MEETING_URL = process.env.URL;
 const BOT_NAME = process.env.BOT_NAME || 'Bot Recorder';
 const S3_BUCKET = process.env.S3;
 const AWS_REGION = process.env.AWS_REGION || 'eu-north-1';
-const RECORDING_PATH = `/app/recordings/${BOT_NAME}-${Date.now()}.mp4`;
+const FILE_NAME = process.env.FILENAME || `${BOT_NAME}-${Date.now()}.mp4`;
+const RECORDING_PATH = `/app/recordings/${FILE_NAME}`;
 
 const s3 = new S3Client({ region: AWS_REGION });
 process.env.DISPLAY = ':99';
