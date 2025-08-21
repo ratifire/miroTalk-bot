@@ -11,9 +11,10 @@ def lambda_handler(event, context):
 
         sns_message = json.loads(event['Records'][0]['Sns']['Message'])
         url = sns_message.get('url')
+        file_name = sns_message.get('fileName')
 
-        if not url:
-            raise ValueError("Missing 'url' in SNS message")
+        if not url or not file_name:
+            raise ValueError("Missing 'url' or 'fileName' in SNS message")
 
         response = ecs.run_task(
             cluster="miro-talk-bot-claster",
@@ -33,10 +34,8 @@ def lambda_handler(event, context):
                     {
                         'name': 'mirobot',
                         'environment': [
-                            {
-                                'name': 'URL',
-                                'value': url
-                            }
+                            {'name': 'URL', 'value': url},
+                            {'name': 'FILENAME', 'value': file_name}
                         ]
                     }
                 ]
