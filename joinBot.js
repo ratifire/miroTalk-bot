@@ -106,7 +106,7 @@ async function startRecording() {
     console.log('Starting recording...');
     await waitForAudio();
 
-    return spawn('ffmpeg', [
+    const ffmpeg = spawn('ffmpeg', [
         '-y',
         '-thread_queue_size', '1024',
         '-f', 'x11grab',
@@ -124,6 +124,21 @@ async function startRecording() {
         '-b:a', '128k',
         RECORDING_PATH
     ]);
+
+    // Add error handling for ffmpeg process
+    ffmpeg.on('error', (err) => {
+        console.error('FFmpeg process error:', err);
+    });
+
+    ffmpeg.stderr.on('data', (data) => {
+        console.error('FFmpeg stderr:', data.toString());
+    });
+
+    ffmpeg.on('spawn', () => {
+        console.log('FFmpeg process started successfully');
+    });
+
+    return ffmpeg;
 }
 
 async function monitorMeeting(page, ffmpeg, browser) {
@@ -138,8 +153,31 @@ async function monitorMeeting(page, ffmpeg, browser) {
 
         if (participantCount <= 2) {
             console.log('Meeting ended, stopping recording');
-            ffmpeg.kill('SIGINT');
-            await new Promise(resolve => ffmpeg.on('close', resolve));
+            
+            // Gracefully stop ffmpeg by sending 'q' command
+            ffmpeg.stdin.write('q');
+            
+            // Wait for ffmpeg to close with timeout
+            await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    console.log('FFmpeg close timeout, forcing termination');
+                    ffmpeg.kill('SIGTERM');
+                    reject(new Error('FFmpeg close timeout'));
+                }, 10000); // 10 second timeout
+                
+                ffmpeg.on('close', (code) => {
+                    clearTimeout(timeout);
+                    console.log(`FFmpeg closed with code: ${code}`);
+                    resolve();
+                });
+                
+                ffmpeg.on('error', (err) => {
+                    clearTimeout(timeout);
+                    console.error('FFmpeg error during close:', err);
+                    reject(err);
+                });
+            });
+            
             await browser.close();
             console.log('Recording saved, starting upload...');
             return true; // Return true to indicate meeting ended
@@ -156,6 +194,32 @@ async function uploadRecording(filePath) {
     
     const fileStats = fs.statSync(filePath);
     console.log(`File size: ${Math.round(fileStats.size / 1024 / 1024)}MB`);
+    
+    // Check if file is too small (likely corrupted)
+    if (fileStats.size < 1024 * 1024) { // Less than 1MB
+        throw new Error(`Recording file too small (${fileStats.size} bytes), likely corrupted`);
+    }
+    
+    // Check video duration using ffmpeg
+    console.log('Checking video duration...');
+    try {
+        const durationOutput = execSync(`ffprobe -v quiet -show_entries format=duration -of csv=p=0 "${filePath}"`).toString().trim();
+        const durationSeconds = parseFloat(durationOutput);
+        const durationMinutes = Math.round(durationSeconds / 60 * 100) / 100; // Round to 2 decimal places
+        
+        console.log(`Video duration: ${durationMinutes} minutes`);
+        
+        if (durationSeconds < 600) { // Less than 10 minutes
+            throw new Error(`Video too short (${durationMinutes} minutes), minimum 10 minutes required`);
+        }
+        
+    } catch (error) {
+        if (error.message.includes('Video too short')) {
+            throw error; // Re-throw duration validation error
+        }
+        console.error('Could not check video duration:', error.message);
+        // Continue with upload if duration check fails (ffprobe might not be available)
+    }
     
     const fileStream = fs.createReadStream(filePath);
     
@@ -181,12 +245,19 @@ async function main() {
         await joinMeeting(page);
         
         ffmpeg = await startRecording();
-        const meetingEnded = await monitorMeeting(page, ffmpeg, browser);
         
-        if (meetingEnded) {
-            await uploadRecording(RECORDING_PATH);
-            console.log('Upload completed successfully');
-            process.exit(0);
+        try {
+            const meetingEnded = await monitorMeeting(page, ffmpeg, browser);
+            
+            if (meetingEnded) {
+                await uploadRecording(RECORDING_PATH);
+                console.log('Upload completed successfully');
+                process.exit(0);
+            }
+        } catch (recordingError) {
+            console.error('Recording termination error:', recordingError);
+            console.log('Skipping upload due to recording issues');
+            process.exit(1);
         }
         
     } catch (error) {
