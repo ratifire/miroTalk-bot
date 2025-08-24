@@ -22,7 +22,9 @@ const CONFIG = {
     
     // File paths
     get FILE_NAME() { 
-        return process.env.FILENAME || `${this.BOT_NAME}-${Date.now()}.mp4`; 
+        const filename = process.env.FILENAME || `${this.BOT_NAME}-${Date.now()}`;
+        // Ensure .mp4 extension
+        return filename.endsWith('.mp4') ? filename : `${filename}.mp4`;
     },
     get RECORDING_PATH() {
         const sanitizedFileName = path.basename(this.FILE_NAME).replace(/[^a-zA-Z0-9\-_.]/g, '_');
@@ -590,11 +592,6 @@ async function main() {
         await uploadRecording(CONFIG.RECORDING_PATH);
         logger.fileSaved(CONFIG.RECORDING_PATH);
         logger.containerAlive();
-        
-        // Keep the process alive to prevent file cleanup
-        setInterval(() => {
-            // Silent heartbeat - keeps container alive without logging
-        }, 300000);
     }
 }
 
