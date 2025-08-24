@@ -139,7 +139,9 @@ async function monitorMeeting(page, ffmpeg, browser) {
         if (participantCount <= 2) {
             console.log('Meeting ended, stopping recording');
             ffmpeg.kill('SIGINT');
+            console.log('ffmpeg.kill(\'SIGINT\') completed');
             await new Promise(resolve => ffmpeg.on('close', resolve));
+            console.log('ffmpeg.on(\'close\', resolve) completed');
             await browser.close();
             console.log('Recording saved, starting upload...');
             return true; // Return true to indicate meeting ended
@@ -174,6 +176,7 @@ async function main() {
     let browser, ffmpeg;
     
     try {
+        console.log(`Meeting file name: ${FILE_NAME}`);
         const { browser: browserInstance, page } = await startBrowser();
         browser = browserInstance;
         
