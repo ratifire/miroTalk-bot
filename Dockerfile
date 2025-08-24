@@ -31,7 +31,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
 ENV XDG_RUNTIME_DIR=/tmp
 # URL and S3 should be provided at runtime via -e flags
 
-# Start command
+ #Start command
 CMD ["sh", "-c", "\
     pulseaudio --start --exit-idle-time=-1 --disable-shm=yes --daemonize && \
     sleep 1 && \
@@ -40,3 +40,12 @@ CMD ["sh", "-c", "\
     sleep 2 && \
     node joinBot.js"]
 
+#CMD ["sh", "-c", "\
+#  pulseaudio --start --exit-idle-time=-1 --disable-shm=yes --daemonize && \
+#  sleep 1 && \
+#  pactl load-module module-null-sink sink_name=bot_sink || true && \
+#  Xvfb :99 -screen 0 1280x720x24 & \
+#  sleep 2 && \
+#  node joinBot.js; \
+#  echo 'joinBot.js finished — keeping container alive'; \
+#  tail -f /dev/null"]
